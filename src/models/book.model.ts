@@ -52,7 +52,7 @@ const bookValidationSchema = Joi.object({
     'string.max': 'Title must not exceed 255 characters.',
     'any.required': 'Title is required.',
   }),
-  // authors: Joi.array().items(Joi.string().min(1)).min(1).required(),
+  // Authors: Joi.array().items(Joi.string().min(1)).min(1).required(),
   author: Joi.string(),
   price: Joi.number().min(0).messages({
     'number.min': 'Price cannot be negative.',
