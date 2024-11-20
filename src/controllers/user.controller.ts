@@ -21,6 +21,7 @@ const createUser = async (req: Request, res: Response) => {
   const token = createdUser.generateAuthToken();
   res
     .header('x-auth-token', token)
+    .header('Access-Control-Expose-Headers', 'x-auth-token') // Expose the header so the frontend can access it
     .send(_.pick(createdUser, ['firstName', 'lastName', 'email', 'role']));
 };
 

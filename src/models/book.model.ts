@@ -3,19 +3,16 @@ import Joi from 'joi';
 
 // Create book interface
 interface IBook extends Document {
-  _id: mongoose.Schema.Types.ObjectId;
   isbn: string;
   title: string;
   author: string;
   price: number;
   coverImageUrl: string;
+  category: Array<mongoose.Types.ObjectId>;
 }
 
 // Create book schema
 const bookSchema: Schema<IBook> = new mongoose.Schema({
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-  },
   isbn: {
     type: 'string',
     unique: true,
@@ -36,6 +33,12 @@ const bookSchema: Schema<IBook> = new mongoose.Schema({
   coverImageUrl: {
     type: 'string',
   },
+  category: [
+    {
+      type: mongoose.Types.ObjectId,
+      ref: 'Category',
+    },
+  ],
 });
 
 // Create book model
@@ -43,7 +46,6 @@ const Book: Model<IBook> = mongoose.model<IBook>('Book', bookSchema);
 
 // Joi validation schema for book
 const bookValidationSchema = Joi.object({
-  _id: Joi.string(),
   isbn: Joi.string().pattern(
     /^(97(8|9))?[\- ]?\d{1,5}[\- ]?\d{1,7}[\- ]?\d{1,7}[\- ]?\d{1,7}[\- ]?\d$/,
   ),
@@ -58,6 +60,7 @@ const bookValidationSchema = Joi.object({
     'number.min': 'Price cannot be negative.',
   }),
   coverImageUrl: Joi.string(),
+  category: Joi.array().items(Joi.string()),
 });
 
 export { Book, bookValidationSchema };

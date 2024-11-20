@@ -7,16 +7,14 @@ const login = async (req: Request, res: Response) => {
   if (error)
     return res.status(400).json({ message: 'Email or password is invalid' });
   const user = await User.findOne({ email: req.body.email });
-  if (!user)
-    return res.status(400).json({ message: 'Email or password is invalid' });
+  if (!user) return res.status(400).json({ message: 'Email invalid' });
   // Decrypt the password and compare it with the given password
   const isValidPass = await bcrypt.compare(req.body.password, user.password);
-  if (!isValidPass)
-    return res.status(400).send('Email or password is invalid.');
+  if (!isValidPass) return res.status(400).send('password is invalid.');
 
   // Generat token
   const token = user.generateAuthToken();
-  res.send(token);
+  res.json(token).status(200);
 };
 
 export default { login };
