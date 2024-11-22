@@ -9,6 +9,7 @@ interface IBook extends Document {
   price: number;
   coverImageUrl: string;
   category: Array<mongoose.Types.ObjectId>;
+  stock: number;
 }
 
 // Create book schema
@@ -39,6 +40,9 @@ const bookSchema: Schema<IBook> = new mongoose.Schema({
       ref: 'Category',
     },
   ],
+  stock: {
+    type: Number,
+  },
 });
 
 // Create book model
@@ -61,6 +65,9 @@ const bookValidationSchema = Joi.object({
   }),
   coverImageUrl: Joi.string(),
   category: Joi.array().items(Joi.string()),
+  stock: Joi.number().integer().min(0).messages({
+    'number.min': 'Price cannot be negative.',
+  }),
 });
 
 export { Book, bookValidationSchema };

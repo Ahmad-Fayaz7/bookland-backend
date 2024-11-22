@@ -9,6 +9,7 @@ interface IUser extends Document {
   email: string;
   password: string;
   role: string;
+  cart: mongoose.Types.ObjectId;
   generateAuthToken: () => string;
 }
 const userSchema: Schema<IUser> = new mongoose.Schema({
@@ -39,6 +40,11 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
     default: 'customer',
     required: true,
   },
+  cart: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Cart',
+    required: true,
+  },
 });
 
 // eslint-disable-next-line no-undef
@@ -46,7 +52,10 @@ const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) throw new Error('JWT token not provided');
 
 userSchema.methods.generateAuthToken = function () {
-  const token = jwt.sign({ _id: this._id, role: this.role }, jwtSecret);
+  const token = jwt.sign(
+    { _id: this._id, email: this.email, role: this.role },
+    jwtSecret,
+  );
   return token;
 };
 

@@ -3,7 +3,7 @@ import Joi from 'joi';
 import { CartItemDTO } from '../dtos/cart-item.dto.js';
 
 // Create cart interface
-interface ICart extends Document {
+export interface ICart extends Document {
   user: mongoose.Types.ObjectId;
   cartItems: Array<CartItemDTO>;
   totalPrice: number;
@@ -28,6 +28,11 @@ const cartSchema: Schema<ICart> = new mongoose.Schema({
         min: 1,
         required: true,
       },
+      price: {
+        type: Number,
+        min: 0,
+        required: true,
+      },
     },
   ],
   totalPrice: {
@@ -50,7 +55,7 @@ const cartValidationSchema = Joi.object({
   cartItems: Joi.array()
     .items(
       Joi.object({
-        product: Joi.string()
+        book: Joi.string()
           .pattern(/^[0-9a-fA-F]{24}$/) // Validate as a MongoDB ObjectId
           .required()
           .messages({
@@ -59,6 +64,10 @@ const cartValidationSchema = Joi.object({
         quantity: Joi.number().integer().min(1).required().messages({
           'number.base': 'Quantity must be a number.',
           'number.min': 'Quantity must be at least 1.',
+        }),
+        price: Joi.number().min(0).required().messages({
+          'number.base': 'Price must be a number.',
+          'number.min': 'Price cannot be negative.',
         }),
       }),
     )

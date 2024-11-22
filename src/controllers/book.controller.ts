@@ -89,7 +89,6 @@ const createBook = async (req: Request, res: Response) => {
       const filePath = path.join(PUBLIC_IMAGE_PATH, req.file.filename); // Store relative path
       req.body.coverImageUrl = filePath;
     }
-    console.log(req.body);
     const newBook = await bookService.createBook(req.body);
     res.json(newBook);
   } catch (error) {

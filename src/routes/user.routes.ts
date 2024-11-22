@@ -7,4 +7,5 @@ router.get('/users', userController.getAllUsers);
 router.post('/users', userController.createUser);
 // DELETE user by ID
 router.delete('/users/:id', authorize, userController.deleteUser);
+router.get('/users/me', authorize, userController.me);
 export default router;

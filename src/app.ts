@@ -1,10 +1,12 @@
-import express, { Request, Response, NextFunction } from 'express'; // Import relevant types
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url'; // Import this to work with import.meta.url
 
 import { connectToDb } from './services/db.service.js';
 import router from './routes/index.js';
+import express from 'express';
+import 'express-async-errors';
+import errorHandler from './middlewares/error-handling.middlewar.js';
 
 // Get the directory name (replaces __dirname)
 const __filename = fileURLToPath(import.meta.url); // Get the current file URL
@@ -37,10 +39,6 @@ app.use(express.static('public'));
 // API routes
 app.use(router);
 
-// Error handling middleware with proper TypeScript types
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('Error:', err.message || err);
-  res.status(500).json({ message: 'Server Error', error: err.message });
-});
-
+// Error handler middlewar
+app.use(errorHandler);
 export default app;
