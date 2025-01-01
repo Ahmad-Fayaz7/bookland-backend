@@ -4,6 +4,9 @@ import { validateCategory } from '../validations/category.validation.js';
 
 const getCategories = async (req: Request, res: Response) => {
   const categories = await categoryService.getAllCategories();
+  categories.map((category) => {
+    category.imageUrl = `${req.protocol}://${req.get('host')}${category.imageUrl}`;
+  });
   res.json(categories).status(200);
 };
 

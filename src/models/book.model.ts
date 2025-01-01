@@ -6,6 +6,7 @@ interface IBook extends Document {
   isbn: string;
   title: string;
   author: string;
+  description: string;
   price: number;
   coverImageUrl: string;
   category: Array<mongoose.Types.ObjectId>;
@@ -25,6 +26,9 @@ const bookSchema: Schema<IBook> = new mongoose.Schema({
     maxLength: 255,
   },
   author: {
+    type: 'string',
+  },
+  description: {
     type: 'string',
   },
   price: {
@@ -58,8 +62,8 @@ const bookValidationSchema = Joi.object({
     'string.max': 'Title must not exceed 255 characters.',
     'any.required': 'Title is required.',
   }),
-  // Authors: Joi.array().items(Joi.string().min(1)).min(1).required(),
   author: Joi.string(),
+  descipton: Joi.string(),
   price: Joi.number().min(0).messages({
     'number.min': 'Price cannot be negative.',
   }),
@@ -70,4 +74,4 @@ const bookValidationSchema = Joi.object({
   }),
 });
 
-export { Book, bookValidationSchema };
+export { Book, IBook, bookValidationSchema };

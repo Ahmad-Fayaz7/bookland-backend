@@ -16,7 +16,7 @@ const createUser = async (data: unknown) => {
 
   // Create the cart
   const newCart = await Cart.create({
-    user: user._id, // This can be null at this point
+    user: user._id,
     cartItems: [],
     totalPrice: 0,
   });

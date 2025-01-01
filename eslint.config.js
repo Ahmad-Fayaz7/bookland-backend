@@ -9,6 +9,11 @@ import pluginPrettier from 'eslint-plugin-prettier';
 
 export default [
   {
+    env: {
+      node: true,
+    },
+  },
+  {
     ignores: ['./dist'], // Array of ignore patterns
   },
   {

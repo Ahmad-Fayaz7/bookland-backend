@@ -3,9 +3,9 @@ import path from 'path';
 import { fileURLToPath } from 'url'; // Import this to work with import.meta.url
 
 import { connectToDb } from './services/db.service.js';
+import 'express-async-errors';
 import router from './routes/index.js';
 import express from 'express';
-import 'express-async-errors';
 import errorHandler from './middlewares/error-handling.middlewar.js';
 
 // Get the directory name (replaces __dirname)
@@ -29,7 +29,12 @@ app.use(
   cors({
     origin: '*', // Allow all origins; restrict in production
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Access-Control-Allow-Headers',
+      'Content-Type',
+      'Authorization',
+      'x-auth-token',
+    ],
   }),
 );
 

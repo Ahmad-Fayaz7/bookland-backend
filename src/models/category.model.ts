@@ -12,7 +12,22 @@ interface ICategory extends Document {
 const categorySchema: Schema<ICategory> = new mongoose.Schema({
   name: {
     type: String,
-    enum: ['Fiction', 'NonFiction', 'Science', 'History', 'Fantasy', 'Other'],
+    enum: [
+      'Fiction',
+      'Science',
+      'History',
+      'Fantasy',
+      'Science Fiction',
+      'Historical Fiction',
+      'Thriller',
+      'Mystery',
+      'Adventure',
+      'Classic',
+      'Romance',
+      'Non-fiction',
+      'Young Adult',
+      'Other',
+    ],
     default: 'Other',
     unique: true,
   },
@@ -22,6 +37,9 @@ const categorySchema: Schema<ICategory> = new mongoose.Schema({
       ref: 'Book',
     },
   ],
+  imageUrl: {
+    type: String,
+  },
 });
 
 // Create category model

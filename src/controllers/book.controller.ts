@@ -5,14 +5,17 @@ import { cleanupUploadedFile } from '../utils/file.utils.js';
 import path from 'path';
 import { Category } from '../models/category.model.js';
 import { validateId } from '../validations/id.validator.js';
+import ApiError from '../models/api-error.model.js';
+
 const PUBLIC_IMAGE_PATH = '/images/books/';
 
 // Get all books
 const getBooks = async (req: Request, res: Response) => {
-  const books = await bookService.getAllBooks();
-  books.map((book) => {
-    book.coverImageUrl = `${req.protocol}://${req.get('host')}${book.coverImageUrl}`;
-  });
+  let books = await bookService.getAllBooks();
+  const reqProtocol = req.protocol;
+  const reqHost = req.get('host');
+  books = bookService.setCoverImageUrl(books, reqProtocol, reqHost);
+
   res.send(books);
 };
 
@@ -21,59 +24,40 @@ const getBook = async (req: Request, res: Response) => {
   const bookId = req.params.id;
   const isValid = validateId(bookId);
   if (!isValid) {
-    return res.status(400).json({ message: 'Invalid book ID format.' });
+    throw new ApiError('Invalid book ID format.', 400);
   }
 
-  try {
-    const book = await bookService.getBook(bookId);
-    if (!book) {
-      return res.status(400).json({ message: 'Book not found.' });
-    }
-    book.coverImageUrl = `${req.protocol}://${req.get('host')}${book.coverImageUrl}`;
-
-    res.status(200).json(book);
-  } catch (error) {
-    console.log('Error: ', error);
-    res.status(500).json({ message: 'Something went wrong' });
+  const book = await bookService.getBook(bookId);
+  if (!book) {
+    throw new ApiError('Book not found.', 404);
   }
+  book.coverImageUrl = `${req.protocol}://${req.get('host')}${book.coverImageUrl}`;
+
+  res.status(200).json(book);
 };
 
 // Get book by category
 export const getBooksByCategory = async (req: Request, res: Response) => {
   const { categoryId } = req.params;
   const isValid = validateId(categoryId);
-  // Step 1: Validate that categoryId is a valid ObjectId
+  // Validate that categoryId is a valid ObjectId
   if (!isValid) {
-    return res.status(400).json({ message: 'Invalid category ID format.' });
+    throw new ApiError('Invalid category ID format.', 400);
   }
 
-  try {
-    // Step 2: Check if the category exists
-    const category = await Category.findById(categoryId);
-    console.log(category);
-    if (!category) {
-      return res.status(404).json({
-        message: `Category with ID ${categoryId} not found.`,
-      });
-    }
-
-    // Step 3: Get books for the specified category
-    const books = await bookService.getBooksByCategory(categoryId);
-
-    if (!books) {
-      return res.status(404).json({
-        message: 'No books found for this category.',
-      });
-    }
-
-    // Step 4: Return the books found
-    return res.status(200).json(books);
-  } catch (error) {
-    console.error('Error occurred:', error);
-    return res.status(500).json({
-      message: 'Something went wrong while retrieving the books.',
-    });
+  // Check if the category exists
+  const category = await Category.findById(categoryId).populate('books');
+  if (!category) {
+    throw new ApiError(`Category with ID ${categoryId} not found.`, 404);
   }
+
+  // Get books for the specified category
+  const books = category.books;
+  if (!books) {
+    throw new ApiError('No books found for this category.', 404);
+  }
+  // Return the books found
+  return res.status(200).json(books);
 };
 
 // Create book
