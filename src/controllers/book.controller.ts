@@ -6,17 +6,18 @@ import path from 'path';
 import { Category } from '../models/category.model.js';
 import { validateId } from '../validations/id.validator.js';
 import ApiError from '../models/api-error.model.js';
+import { Book } from '../models/book.model.js';
+import 'dotenv/config';
+import { BookDTO } from '../dtos/book.dto.js';
+import mongoose from 'mongoose';
 
+const apiUrl = process.env.PUBLIC_API;
 const PUBLIC_IMAGE_PATH = '/images/books/';
 
 // Get all books
-const getBooks = async (req: Request, res: Response) => {
+const getBooks = async () => {
   let books = await bookService.getAllBooks();
-  const reqProtocol = req.protocol;
-  const reqHost = req.get('host');
-  books = bookService.setCoverImageUrl(books, reqProtocol, reqHost);
-
-  res.send(books);
+  return books;
 };
 
 // Get book by ID
@@ -57,9 +58,50 @@ export const getBooksByCategory = async (req: Request, res: Response) => {
     throw new ApiError('No books found for this category.', 404);
   }
   // Return the books found
+
   return res.status(200).json(books);
 };
 
+// Get book by category paginated
+export const getBooksByCategoryPaginated = async (
+  req: Request,
+  res: Response,
+) => {
+  const filter = req.body;
+  const skip = (filter.page - 1) * filter.limit;
+  let books: BookDTO[] = await Book.find({
+    category: filter.category as mongoose.Types.ObjectId,
+  })
+    .lean()
+    .skip(skip)
+    .limit(filter.limit)
+    .exec();
+
+  books = books.map((book) => ({
+    ...book,
+    coverImageUrl: `${apiUrl}${book.coverImageUrl}`,
+  }));
+
+  const totalDocuments = await Book.countDocuments({
+    category: filter.category,
+  });
+
+  const totalPages = Math.ceil(totalDocuments / filter.limit);
+  return res
+    .status(200)
+    .json({ currentPage: filter.page, totalPages, totalDocuments, books });
+};
+
+// Search books by title and category
+
+export const searchBooksByTitleAndCategory = async (params: any) => {
+  console.log('Search books by title and category:', params);
+  const books = await bookService.searchBooksByTitleAndCategory(params);
+  if (!books) {
+    throw new ApiError('No books found for this search.', 404);
+  }
+  return books;
+};
 // Create book
 const createBook = async (req: Request, res: Response) => {
   try {
@@ -82,4 +124,11 @@ const createBook = async (req: Request, res: Response) => {
   }
 };
 
-export default { getBooks, getBook, getBooksByCategory, createBook };
+export default {
+  getBooks,
+  getBook,
+  getBooksByCategory,
+  createBook,
+  getBooksByCategoryPaginated,
+  searchBooksByTitleAndCategory,
+};

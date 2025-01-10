@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { BookCreationDTO } from '../dtos/book.dto.js';
+import { BookCreationDTO, BookDTO } from '../dtos/book.dto.js';
 import { Book, IBook } from '../models/book.model.js';
 import mongoose from 'mongoose';
 
@@ -47,10 +47,26 @@ const findBooksByCategory = async (category: mongoose.Types.ObjectId) => {
   }
 };
 
+const searchBooksByTitleAndCategory = async (params: any) => {
+  try {
+    const title = params.searchTerm as string;
+
+    const books = await Book.find({
+      category: params.category,
+      title: { $regex: title, $options: 'i' },
+    }).lean();
+    return books;
+  } catch (err) {
+    console.error('Error searching books by title and category:', err);
+    throw new Error('Could not search books by title and category');
+  }
+};
+
 export default {
   getAllBooks,
   getBook,
   createBook,
   setCoverImageUrl,
   findBooksByCategory,
+  searchBooksByTitleAndCategory,
 };
