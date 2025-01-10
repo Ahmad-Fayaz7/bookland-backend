@@ -14,10 +14,27 @@ import mongoose from 'mongoose';
 const apiUrl = process.env.PUBLIC_API;
 const PUBLIC_IMAGE_PATH = '/images/books/';
 
-// Get all books
-const getBooks = async () => {
+// Get featured books
+// TODO: Modify this function to return only a limited number of books
+const getFeaturedBooks = async () => {
   let books = await bookService.getAllBooks();
   return books;
+};
+
+// Get books paginated
+const getBooks = async (filter: any) => {
+  const skip = (filter.page - 1) * filter.limit;
+  let books: BookDTO[] = await Book.find()
+    .populate('category')
+    .lean()
+    .skip(skip)
+    .limit(filter.limit)
+    .exec();
+
+  const totalDocuments = await Book.countDocuments();
+
+  const totalPages = Math.ceil(totalDocuments / filter.limit);
+  return { currentPage: filter.page, totalPages, totalDocuments, books };
 };
 
 // Get book by ID
@@ -91,11 +108,15 @@ export const getBooksByCategoryPaginated = async (
     .status(200)
     .json({ currentPage: filter.page, totalPages, totalDocuments, books });
 };
-
+export const searchBooksByTitle = async (title: string) => {
+  const books = await bookService.searchBooksByTitle(title);
+  if (!books) {
+    throw new ApiError('No books found for this search.', 404);
+  }
+  return books;
+};
 // Search books by title and category
-
 export const searchBooksByTitleAndCategory = async (params: any) => {
-  console.log('Search books by title and category:', params);
   const books = await bookService.searchBooksByTitleAndCategory(params);
   if (!books) {
     throw new ApiError('No books found for this search.', 404);
@@ -126,9 +147,11 @@ const createBook = async (req: Request, res: Response) => {
 
 export default {
   getBooks,
+  getFeaturedBooks,
   getBook,
   getBooksByCategory,
   createBook,
   getBooksByCategoryPaginated,
+  searchBooksByTitle,
   searchBooksByTitleAndCategory,
 };

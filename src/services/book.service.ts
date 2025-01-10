@@ -47,6 +47,13 @@ const findBooksByCategory = async (category: mongoose.Types.ObjectId) => {
   }
 };
 
+const searchBooksByTitle = async (title: string) => {
+  const books = await Book.find({
+    title: { $regex: title, $options: 'i' },
+  }).lean();
+
+  return books;
+};
 const searchBooksByTitleAndCategory = async (params: any) => {
   try {
     const title = params.searchTerm as string;
@@ -68,5 +75,6 @@ export default {
   createBook,
   setCoverImageUrl,
   findBooksByCategory,
+  searchBooksByTitle,
   searchBooksByTitleAndCategory,
 };

@@ -7,12 +7,37 @@ import { IBook } from '../models/book.model.js';
 import { BookDTO } from '../dtos/book.dto.js';
 
 const router = express.Router();
-// Get all books
+// Get featured books
 router.get(
   '/books/featured',
   async (req, res, next) => {
     try {
-      const books = await bookController.getBooks();
+      const books = await bookController.getFeaturedBooks();
+      res.locals.books = books;
+      next();
+    } catch (error) {
+      next(error);
+    }
+  },
+  setCoverImageUrl,
+  (req, res) => {
+    res.json(res.locals.books);
+  },
+);
+
+// Get all books
+router.get(
+  '/books',
+  async (req, res, next) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      if (page < 1 || limit < 1) {
+        return res.status(400).json({ error: 'Invalid page or limit value' });
+      }
+
+      const books = await bookController.getBooks({ page, limit });
       res.locals.books = books;
       next();
     } catch (error) {
@@ -35,7 +60,6 @@ router.get('/books/category/:categoryId', bookController.getBooksByCategory);
 router.post('/books/category', bookController.getBooksByCategoryPaginated);
 
 // Get books by title and category
-// POST route with middleware
 router.post(
   '/books/search',
   async (req, res, next) => {
@@ -57,4 +81,18 @@ router.post(
   },
 );
 
+// Get books by title
+router.get(
+  '/books/search/:title',
+  async (req, res, next) => {
+    const title = req.params.title;
+    const books = await bookController.searchBooksByTitle(title);
+    res.locals.books = books;
+    next();
+  },
+  setCoverImageUrl,
+  (req, res) => {
+    res.json(res.locals.books);
+  },
+);
 export default router;
