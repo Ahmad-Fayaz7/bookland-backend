@@ -14,7 +14,6 @@ const __dirname = path.dirname(__filename); // Get the directory path from the f
 
 // Configuration
 const IMAGE_DIR = path.join(__dirname, '../../public', 'images', 'books'); // Use the absolute path
-console.log(IMAGE_DIR);
 const app = express();
 
 // Connect to the database

@@ -14,7 +14,16 @@ const getBook = async (id: string) => {
 const createBook = async (book: BookCreationDTO) => {
   try {
     const newBook = new Book(
-      _.pick(book, ['isbn', 'title', 'author', 'price', 'coverImageUrl']),
+      _.pick(book, [
+        'isbn',
+        'title',
+        'author',
+        'price',
+        'stock',
+        'coverImageUrl',
+        'category',
+        'description',
+      ]),
     );
 
     const createdBook = await newBook.save();
@@ -69,6 +78,15 @@ const searchBooksByTitleAndCategory = async (params: any) => {
   }
 };
 
+const editBook = async (id: string, book: BookDTO) => {
+  console.log('book:', book);
+  if (typeof book.category === 'string') {
+    book.category = JSON.parse(book.category);
+  }
+  const updatedBook = await Book.findByIdAndUpdate(id, book, { new: true });
+  return updatedBook;
+};
+
 export default {
   getAllBooks,
   getBook,
@@ -77,4 +95,5 @@ export default {
   findBooksByCategory,
   searchBooksByTitle,
   searchBooksByTitleAndCategory,
+  editBook,
 };

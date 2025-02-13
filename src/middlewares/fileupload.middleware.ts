@@ -1,22 +1,30 @@
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-// Configuration
-// Const IMAGE_DIR = './public/images/books/';
-// Const PUBLIC_IMAGE_PATH = '/public/images/books/';
+// Get __dirname when using ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Configure where to store files and how to name them
+// Navigate to the project root and set up directory path
+const rootDirectory = path.join(__dirname, '../../');
+const directory = path.join(rootDirectory, 'public/images/books');
+
+// Ensure the directory exists
+if (!fs.existsSync(directory)) {
+  fs.mkdirSync(directory, { recursive: true });
+}
+
+// Configure multer storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const directory = './public/images/default/';
-
-    cb(null, directory); // Specify the folder to store the files
+    cb(null, directory); // Specify folder to store files
   },
   filename: function (req, file, cb) {
-    // Name files with a timestamp
     cb(null, `${Date.now()}${path.extname(file.originalname)}`);
   },
 });
 
 // Initialize multer with the storage configuration
-export const upload = multer({ storage: storage });
+export const upload = multer({ storage });

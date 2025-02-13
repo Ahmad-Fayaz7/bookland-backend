@@ -1,21 +1,24 @@
 import bookService from '../services/book.service.js';
 import { Request, Response } from 'express';
 import { validateBook } from '../validations/book.validation.js';
-import { cleanupUploadedFile } from '../utils/file.utils.js';
+import { cleanupUploadedFile, deleteFile } from '../utils/file.utils.js';
 import path from 'path';
 import { Category } from '../models/category.model.js';
 import { validateId } from '../validations/id.validator.js';
 import ApiError from '../models/api-error.model.js';
 import { Book } from '../models/book.model.js';
 import 'dotenv/config';
-import { BookDTO } from '../dtos/book.dto.js';
+import { BookCreationDTO, BookDTO } from '../dtos/book.dto.js';
 import mongoose from 'mongoose';
+import { fileURLToPath } from 'url';
 
 const apiUrl = process.env.PUBLIC_API;
 const PUBLIC_IMAGE_PATH = '/images/books/';
+// Define __dirname manually for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// Get featured books
-// TODO: Modify this function to return only a limited number of books
+// TODO: Get featured books
 const getFeaturedBooks = async () => {
   let books = await bookService.getAllBooks();
   return books;
@@ -126,6 +129,12 @@ export const searchBooksByTitleAndCategory = async (params: any) => {
 // Create book
 const createBook = async (req: Request, res: Response) => {
   try {
+    const book = req.body as BookCreationDTO;
+
+    if (typeof book.category === 'string') {
+      book.category = JSON.parse(book.category);
+    }
+
     const error = validateBook(req.body);
     if (error) {
       cleanupUploadedFile(req);
@@ -136,12 +145,44 @@ const createBook = async (req: Request, res: Response) => {
       const filePath = path.join(PUBLIC_IMAGE_PATH, req.file.filename); // Store relative path
       req.body.coverImageUrl = filePath;
     }
-    const newBook = await bookService.createBook(req.body);
-    res.json(newBook);
+    const newBook = await bookService.createBook(book);
+    res.json({ message: 'Book created successfully', newBook });
   } catch (error) {
     cleanupUploadedFile(req);
     console.log('Error creating book: ', error);
     res.json({ message: 'Error creating book', status: 500 });
+  }
+};
+// Edit book
+const editBook = async (req: Request, res: Response) => {
+  const bookId = req.params.id;
+  const isValid = validateId(bookId);
+  if (!isValid) {
+    throw new ApiError('Invalid book ID format.', 400);
+  }
+
+  const book = await bookService.getBook(bookId);
+  if (!book) {
+    throw new ApiError('Book not found.', 404);
+  }
+  // Create file path for book cover
+  if (req.file) {
+    // Delete existing cover image
+    const existingImagePath = path.join(
+      __dirname,
+      '../../public',
+      book.coverImageUrl,
+    );
+    deleteFile(existingImagePath);
+    const newFilePath = path.join(PUBLIC_IMAGE_PATH, req.file.filename); // Store relative path
+    req.body.coverImageUrl = newFilePath;
+  }
+  try {
+    const updatedBook = await bookService.editBook(bookId, req.body);
+    res.json({ message: 'Book updated successfully', updatedBook });
+  } catch (error) {
+    console.log('Error updating book: ', error);
+    res.json({ message: 'Error updating book', status: 500 });
   }
 };
 
@@ -154,4 +195,5 @@ export default {
   getBooksByCategoryPaginated,
   searchBooksByTitle,
   searchBooksByTitleAndCategory,
+  editBook,
 };

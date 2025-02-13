@@ -4,7 +4,7 @@ import { upload } from '../middlewares/fileupload.middleware.js';
 import setCoverImageUrl from '../middlewares/set-coverimage.middleware.js';
 import { myLogger } from '../middlewares/set-directory.middleware.js';
 import { IBook } from '../models/book.model.js';
-import { BookDTO } from '../dtos/book.dto.js';
+import { BookCreationDTO, BookDTO } from '../dtos/book.dto.js';
 
 const router = express.Router();
 // Get featured books
@@ -94,5 +94,19 @@ router.get(
   (req, res) => {
     res.json(res.locals.books);
   },
+);
+
+// Create a new book
+router.post(
+  '/books/create',
+  upload.single('coverImageUrl'),
+  bookController.createBook,
+);
+
+// Update a book by ID
+router.put(
+  '/books/edit/:id',
+  upload.single('coverImageUrl'),
+  bookController.editBook,
 );
 export default router;

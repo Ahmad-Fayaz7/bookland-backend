@@ -7,7 +7,7 @@ export interface BookCreationDTO {
   description: string;
   price: number;
   coverImageUrl: string;
-  category: Array<string> | null;
+  category: Array<string>;
   stock: number;
 }
 

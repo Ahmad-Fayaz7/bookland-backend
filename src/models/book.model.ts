@@ -54,16 +54,17 @@ const Book: Model<IBook> = mongoose.model<IBook>('Book', bookSchema);
 
 // Joi validation schema for book
 const bookValidationSchema = Joi.object({
-  isbn: Joi.string().pattern(
+  isbn: Joi.string(),
+  /* .pattern(
     /^(97(8|9))?[\- ]?\d{1,5}[\- ]?\d{1,7}[\- ]?\d{1,7}[\- ]?\d{1,7}[\- ]?\d$/,
-  ),
+  ), */
   title: Joi.string().required().min(1).max(255).messages({
     'string.empty': 'Title cannot be empty.',
     'string.max': 'Title must not exceed 255 characters.',
     'any.required': 'Title is required.',
   }),
   author: Joi.string(),
-  descipton: Joi.string(),
+  description: Joi.string(),
   price: Joi.number().min(0).messages({
     'number.min': 'Price cannot be negative.',
   }),
