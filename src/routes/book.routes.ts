@@ -109,4 +109,7 @@ router.put(
   upload.single('coverImageUrl'),
   bookController.editBook,
 );
+
+// Delete a book by ID
+router.delete('/books/:id', bookController.deleteBook);
 export default router;

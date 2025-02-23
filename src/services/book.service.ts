@@ -87,6 +87,18 @@ const editBook = async (id: string, book: BookDTO) => {
   return updatedBook;
 };
 
+// Delete a book by ID
+const deleteBook = async (id: string) => {
+  try {
+    const deletedBook = await Book.findByIdAndDelete(id);
+    return deletedBook; // Return the deleted book
+  } catch (error) {
+    // Catch any errors
+    console.error('Error deleting book:', error); // Log the error
+    throw new Error('Could not delete book'); // Throw an error to the caller
+  } // End of try-catch block
+}; // End of deleteBook function
+
 export default {
   getAllBooks,
   getBook,
@@ -96,4 +108,5 @@ export default {
   searchBooksByTitle,
   searchBooksByTitleAndCategory,
   editBook,
+  deleteBook,
 };

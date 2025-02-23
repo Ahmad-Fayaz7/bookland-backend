@@ -146,7 +146,7 @@ const createBook = async (req: Request, res: Response) => {
       req.body.coverImageUrl = filePath;
     }
     const newBook = await bookService.createBook(book);
-    res.json({ message: 'Book created successfully', newBook });
+    res.json({ message: 'Book created successfully', newBookId: newBook._id });
   } catch (error) {
     cleanupUploadedFile(req);
     console.log('Error creating book: ', error);
@@ -186,6 +186,35 @@ const editBook = async (req: Request, res: Response) => {
   }
 };
 
+// Delete book
+const deleteBook = async (req: Request, res: Response) => {
+  const bookId = req.params.id;
+  const isValid = validateId(bookId);
+  if (!isValid) {
+    throw new ApiError('Invalid book ID format.', 400);
+  }
+
+  const book = await bookService.getBook(bookId);
+  if (!book) {
+    throw new ApiError('Book not found.', 404);
+  }
+
+  try {
+    // Delete existing cover image
+    const existingImagePath = path.join(
+      __dirname,
+      '../../public',
+      book.coverImageUrl,
+    );
+    deleteFile(existingImagePath);
+    await bookService.deleteBook(bookId);
+    res.json({ message: 'Book deleted successfully' });
+  } catch (error) {
+    console.log('Error deleting book: ', error);
+    res.json({ message: 'Error deleting book', status: 500 });
+  }
+};
+
 export default {
   getBooks,
   getFeaturedBooks,
@@ -196,4 +225,5 @@ export default {
   searchBooksByTitle,
   searchBooksByTitleAndCategory,
   editBook,
+  deleteBook,
 };
