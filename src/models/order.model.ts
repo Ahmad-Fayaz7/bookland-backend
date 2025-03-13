@@ -53,7 +53,7 @@ const orderValidationSchema = Joi.object({
   address: Joi.string().min(1).max(255).required(),
   phone: Joi.string(),
   status: Joi.string(),
-  orderItems: Joi.array()
+  /* orderItems: Joi.array()
     .items(
       Joi.object({
         bookId: Joi.string().required(),
@@ -61,7 +61,7 @@ const orderValidationSchema = Joi.object({
       }),
     )
     .min(1)
-    .required(),
+    .required(), */
 
   orderDate: Joi.date(),
   paymentMethod: Joi.string(),
