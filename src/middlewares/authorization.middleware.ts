@@ -1,3 +1,5 @@
+// Middlware for user authentication
+
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import 'dotenv/config';
 import { Request, Response, NextFunction } from 'express';

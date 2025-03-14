@@ -58,7 +58,7 @@ const getBook = async (req: Request, res: Response) => {
 };
 
 // Get book by category
-export const getBooksByCategory = async (req: Request, res: Response) => {
+/* export const getBooksByCategory = async (req: Request, res: Response) => {
   const { categoryId } = req.params;
   const isValid = validateId(categoryId);
   // Validate that categoryId is a valid ObjectId
@@ -80,36 +80,39 @@ export const getBooksByCategory = async (req: Request, res: Response) => {
   // Return the books found
 
   return res.status(200).json(books);
-};
+}; */
 
 // Get book by category paginated
 export const getBooksByCategoryPaginated = async (
   req: Request,
   res: Response,
 ) => {
-  const filter = req.body;
-  const skip = (filter.page - 1) * filter.limit;
+  console.log('I have been called');
+  const { page = 1, limit = 10, category } = req.query;
+  // Convert pagination values to numbers
+  const pageNum = parseInt(page as string, 1);
+  const limitNum = parseInt(limit as string, 10);
+  const skip = (pageNum - 1) * limitNum;
   let books: BookDTO[] = await Book.find({
-    category: filter.category as mongoose.Types.ObjectId,
+    category: category,
   })
     .lean()
     .skip(skip)
-    .limit(filter.limit)
+    .limit(limitNum)
     .exec();
 
   books = books.map((book) => ({
     ...book,
     coverImageUrl: `${apiUrl}${book.coverImageUrl}`,
   }));
-
   const totalDocuments = await Book.countDocuments({
-    category: filter.category,
+    category: category,
   });
 
-  const totalPages = Math.ceil(totalDocuments / filter.limit);
+  const totalPages = Math.ceil(totalDocuments / limitNum);
   return res
     .status(200)
-    .json({ currentPage: filter.page, totalPages, totalDocuments, books });
+    .json({ currentPage: pageNum, totalPages, totalDocuments, books });
 };
 export const searchBooksByTitle = async (title: string) => {
   const books = await bookService.searchBooksByTitle(title);
@@ -219,7 +222,7 @@ export default {
   getBooks,
   getFeaturedBooks,
   getBook,
-  getBooksByCategory,
+  // getBooksByCategory,
   createBook,
   getBooksByCategoryPaginated,
   searchBooksByTitle,

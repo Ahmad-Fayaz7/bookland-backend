@@ -1,3 +1,5 @@
+// Middleware to set books cover image on getting books
+
 import { Request, Response, NextFunction } from 'express';
 
 const apiUrl = process.env.PUBLIC_API || ''; // Fallback to empty string if not set
