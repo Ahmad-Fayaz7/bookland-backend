@@ -1,4 +1,4 @@
-// Middleware to set books cover image on getting books
+/* // Middleware to set books cover image on getting books
 
 import { Request, Response, NextFunction } from 'express';
 
@@ -37,3 +37,4 @@ const setCoverImageUrl = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export default setCoverImageUrl;
+ */

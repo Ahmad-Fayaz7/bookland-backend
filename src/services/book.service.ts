@@ -2,13 +2,70 @@ import _ from 'lodash';
 import { BookCreationDTO, BookDTO } from '../dtos/book.dto.js';
 import { Book, IBook } from '../models/book.model.js';
 import mongoose from 'mongoose';
+import 'dotenv/config';
+import ApiError from '../models/api-error.model.js';
+
+const host = process.env.HOST;
+const protocol = process.env.PROTOCOL;
+const port = process.env.PORT;
+const apiUrl = `${protocol}://${host}:${port}` || ''; // Fallback to empty string if not set
 
 const getAllBooks = async () => {
-  return await Book.find();
+  const books = await Book.find();
+
+  return setCoverImageUrl(books);
+};
+
+// Get books paginated
+const getBooksPaginated = async (page: number, limit: number) => {
+  if (page < 1 || limit < 1) {
+    throw new Error('Invalid page or limit value');
+  }
+  const skip = (page - 1) * limit;
+  let books: BookDTO[] = await Book.find()
+    .populate('category')
+    .lean()
+    .skip(skip)
+    .limit(limit)
+    .exec();
+  books = setCoverImageUrl(books);
+  const totalDocuments = await Book.countDocuments();
+
+  const totalPages = Math.ceil(totalDocuments / limit);
+  return { currentPage: page, totalPages, totalDocuments, books };
+};
+
+// Get books by category paginated
+const getBooksByCategoryPaginated = async (
+  pageNum: number,
+  limitNum: number,
+  category: string,
+) => {
+  const skip = (pageNum - 1) * limitNum;
+  let books: BookDTO[] = await Book.find({
+    category: category,
+  })
+    .lean()
+    .skip(skip)
+    .limit(limitNum)
+    .exec();
+
+  /*  books = books.map((book) => ({
+    ...book,
+    coverImageUrl: `${apiUrl}${book.coverImageUrl}`,
+  })); */
+  const totalDocuments = await Book.countDocuments({
+    category: category,
+  });
+
+  const totalPages = Math.ceil(totalDocuments / limitNum);
+  books = setCoverImageUrl(books);
+  return { currentPage: pageNum, totalPages, totalDocuments, books };
 };
 
 const getBook = async (id: string) => {
-  return await Book.findById(id).populate('category');
+  let book = await Book.findById(id).populate('category');
+  return setCoverImageUrl(book);
 };
 
 const createBook = async (book: BookCreationDTO) => {
@@ -35,17 +92,6 @@ const createBook = async (book: BookCreationDTO) => {
   }
 };
 
-const setCoverImageUrl = (
-  books: IBook[],
-  reqProtocol: string,
-  reqHost: string | undefined,
-) => {
-  books.map((book) => {
-    book.coverImageUrl = `${reqProtocol}://${reqHost}${book.coverImageUrl}`;
-  });
-  return books;
-};
-
 const findBooksByCategory = async (category: mongoose.Types.ObjectId) => {
   try {
     const books = await Book.find({ category }).lean(); // Use .lean() for plain objects (optional)
@@ -61,17 +107,19 @@ const searchBooksByTitle = async (title: string) => {
     title: { $regex: title, $options: 'i' },
   }).lean();
 
-  return books;
+  return setCoverImageUrl(books);
 };
-const searchBooksByTitleAndCategory = async (params: any) => {
+const searchBooksByTitleAndCategory = async (
+  searchTerm: string,
+  category: string,
+) => {
   try {
-    const title = params.searchTerm as string;
-
+    console.log(searchTerm);
     const books = await Book.find({
-      category: params.category,
-      title: { $regex: title, $options: 'i' },
+      category: category,
+      title: { $regex: searchTerm, $options: 'i' },
     }).lean();
-    return books;
+    return setCoverImageUrl(books);
   } catch (err) {
     console.error('Error searching books by title and category:', err);
     throw new Error('Could not search books by title and category');
@@ -94,19 +142,47 @@ const deleteBook = async (id: string) => {
     return deletedBook; // Return the deleted book
   } catch (error) {
     // Catch any errors
-    console.error('Error deleting book:', error); // Log the error
+    console.error('Error deleting book:', error);
     throw new Error('Could not delete book'); // Throw an error to the caller
-  } // End of try-catch block
-}; // End of deleteBook function
+  }
+};
+
+function setCoverImageUrl(books: any) {
+  if (!apiUrl) {
+    console.error(
+      'Warning: PUBLIC_API environment variable is not set. Cover image URLs may not work correctly.',
+    );
+  }
+  if (!books) {
+    console.warn('No books found');
+  }
+  try {
+    if (Array.isArray(books)) {
+      books.forEach((book) => {
+        if (book.coverImageUrl) {
+          book.coverImageUrl = `${apiUrl}${book.coverImageUrl}`;
+        }
+      });
+    } else if (typeof books === 'object' && 'coverImageUrl' in books) {
+      // Handle single book object
+      books.coverImageUrl = `${apiUrl}${books.coverImageUrl}`;
+    }
+    return books;
+  } catch (error) {
+    console.error('Error processing coverImageUrl:', error);
+  }
+}
 
 export default {
   getAllBooks,
+  getBooksPaginated,
   getBook,
   createBook,
-  setCoverImageUrl,
   findBooksByCategory,
   searchBooksByTitle,
   searchBooksByTitleAndCategory,
+  getBooksByCategoryPaginated,
   editBook,
   deleteBook,
+  setCoverImageUrl,
 };

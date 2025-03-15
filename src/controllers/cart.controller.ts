@@ -87,7 +87,6 @@ const getCart = async (req: Request, res: Response) => {
   if (!cart) {
     throw new ApiError('Cart not found', 404);
   }
-
   return res.status(200).json(cart);
 };
 

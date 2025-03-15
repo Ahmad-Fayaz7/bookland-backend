@@ -4,11 +4,9 @@ import { Cart, ICart } from '../models/cart.model.js';
 import { User } from '../models/user.model.js';
 import 'express-async-errors';
 import { BookCreationDTO, BookDTO } from '../dtos/book.dto.js';
-import { IBook } from '../models/book.model.js';
 import bookService from './book.service.js';
 import 'dotenv/config';
 
-const apiUrl = process.env.PUBLIC_API;
 const addToCart = async (
   userId: mongoose.Types.ObjectId,
   cartItem: CartItemDTO,
@@ -39,9 +37,9 @@ const getCart = async (userId: mongoose.Types.ObjectId) => {
 
   cart.cartItems = cart.cartItems.map((item) => {
     // Assert that book is properly populated
-    const book = item.book as unknown as BookCreationDTO; // Adjust 'any' to your Book schema type if defined
+    let book = item.book as unknown as BookCreationDTO; // Adjust 'any' to your Book schema type if defined
     if (book && book.coverImageUrl) {
-      book.coverImageUrl = `${apiUrl}${book.coverImageUrl}`;
+      book = bookService.setCoverImageUrl(book);
     }
     return item;
   });
@@ -122,12 +120,8 @@ const getSimilarItems = async (books: BookDTO[]) => {
   if (newBooks.length > 3) {
     result = newBooks.slice(0, 3);
   }
-  result = result.map((r) => ({
-    ...r,
-    coverImageUrl: r.coverImageUrl ? `${apiUrl}${r.coverImageUrl}` : '',
-  }));
 
-  return result;
+  return bookService.setCoverImageUrl(result);
 };
 function evaluateQuantity(cart: ICart, cartItem: CartItemDTO, q: number) {
   // Ensure the quantity does not become negative

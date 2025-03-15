@@ -3,41 +3,37 @@ import { Request, Response } from 'express';
 import { validateBook } from '../validations/book.validation.js';
 import { cleanupUploadedFile, deleteFile } from '../utils/file.utils.js';
 import path from 'path';
-import { Category } from '../models/category.model.js';
 import { validateId } from '../validations/id.validator.js';
 import ApiError from '../models/api-error.model.js';
-import { Book } from '../models/book.model.js';
 import 'dotenv/config';
 import { BookCreationDTO, BookDTO } from '../dtos/book.dto.js';
-import mongoose from 'mongoose';
+
 import { fileURLToPath } from 'url';
 
-const apiUrl = process.env.PUBLIC_API;
 const PUBLIC_IMAGE_PATH = '/images/books/';
 // Define __dirname manually for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // TODO: Get featured books
-const getFeaturedBooks = async () => {
+const getFeaturedBooks = async (req: Request, res: Response) => {
   let books = await bookService.getAllBooks();
-  return books;
+  return res.send(books);
 };
 
 // Get books paginated
-const getBooks = async (filter: any) => {
-  const skip = (filter.page - 1) * filter.limit;
-  let books: BookDTO[] = await Book.find()
-    .populate('category')
-    .lean()
-    .skip(skip)
-    .limit(filter.limit)
-    .exec();
-
-  const totalDocuments = await Book.countDocuments();
-
-  const totalPages = Math.ceil(totalDocuments / filter.limit);
-  return { currentPage: filter.page, totalPages, totalDocuments, books };
+const getBooks = async (req: Request, res: Response) => {
+  try {
+    const page = parseInt(req.query.page as string);
+    const limit = parseInt(req.query.limit as string);
+    if (Number.isNaN(page) || Number.isNaN(limit)) {
+      return res.status(400).send({ message: 'Page or limit is not valid' });
+    }
+    const data = await bookService.getBooksPaginated(page, limit);
+    return res.send(data);
+  } catch (error: any) {
+    return res.status(400).send({ error: error.message });
+  }
 };
 
 // Get book by ID
@@ -48,12 +44,10 @@ const getBook = async (req: Request, res: Response) => {
     throw new ApiError('Invalid book ID format.', 400);
   }
 
-  const book = await bookService.getBook(bookId);
+  let book = await bookService.getBook(bookId);
   if (!book) {
     throw new ApiError('Book not found.', 404);
   }
-  book.coverImageUrl = `${req.protocol}://${req.get('host')}${book.coverImageUrl}`;
-
   res.status(200).json(book);
 };
 
@@ -87,48 +81,48 @@ export const getBooksByCategoryPaginated = async (
   req: Request,
   res: Response,
 ) => {
-  console.log('I have been called');
   const { page = 1, limit = 10, category } = req.query;
   // Convert pagination values to numbers
   const pageNum = parseInt(page as string, 1);
   const limitNum = parseInt(limit as string, 10);
-  const skip = (pageNum - 1) * limitNum;
-  let books: BookDTO[] = await Book.find({
-    category: category,
-  })
-    .lean()
-    .skip(skip)
-    .limit(limitNum)
-    .exec();
-
-  books = books.map((book) => ({
-    ...book,
-    coverImageUrl: `${apiUrl}${book.coverImageUrl}`,
-  }));
-  const totalDocuments = await Book.countDocuments({
-    category: category,
-  });
-
-  const totalPages = Math.ceil(totalDocuments / limitNum);
-  return res
-    .status(200)
-    .json({ currentPage: pageNum, totalPages, totalDocuments, books });
+  try {
+    const data = await bookService.getBooksByCategoryPaginated(
+      pageNum,
+      limitNum,
+      category as string,
+    );
+    return res.send(data);
+  } catch (error) {
+    return res.status(400).send({ error: (error as Error).message });
+  }
 };
-export const searchBooksByTitle = async (title: string) => {
+
+// Search books by title
+export const searchBooksByTitle = async (req: Request, res: Response) => {
+  const title = req.params.title;
   const books = await bookService.searchBooksByTitle(title);
   if (!books) {
     throw new ApiError('No books found for this search.', 404);
   }
-  return books;
+  return res.send(books);
 };
+
 // Search books by title and category
-export const searchBooksByTitleAndCategory = async (params: any) => {
-  const books = await bookService.searchBooksByTitleAndCategory(params);
+export const searchBooksByTitleAndCategory = async (
+  req: Request,
+  res: Response,
+) => {
+  const { searchTerm, category } = req.query;
+  const books = await bookService.searchBooksByTitleAndCategory(
+    searchTerm as string,
+    category as string,
+  );
   if (!books) {
     throw new ApiError('No books found for this search.', 404);
   }
-  return books;
+  return res.send(books);
 };
+
 // Create book
 const createBook = async (req: Request, res: Response) => {
   try {
@@ -156,6 +150,7 @@ const createBook = async (req: Request, res: Response) => {
     res.json({ message: 'Error creating book', status: 500 });
   }
 };
+
 // Edit book
 const editBook = async (req: Request, res: Response) => {
   const bookId = req.params.id;

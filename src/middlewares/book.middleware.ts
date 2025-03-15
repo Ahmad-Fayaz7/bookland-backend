@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import bookController from '../controllers/book.controller.js';
 
-export const fetchBooks = async (
+/* export const fetchBooks = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -20,9 +20,9 @@ export const fetchBooks = async (
   } catch (error) {
     next(error);
   }
-};
+}; */
 
-export const fetchFeaturedBooks = async (
+/* export const fetchFeaturedBooks = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -34,4 +34,4 @@ export const fetchFeaturedBooks = async (
   } catch (error) {
     next(error);
   }
-};
+}; */
