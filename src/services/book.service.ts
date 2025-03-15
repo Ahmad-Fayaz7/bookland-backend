@@ -18,9 +18,6 @@ const getAllBooks = async () => {
 
 // Get books paginated
 const getBooksPaginated = async (page: number, limit: number) => {
-  if (page < 1 || limit < 1) {
-    throw new Error('Invalid page or limit value');
-  }
   const skip = (page - 1) * limit;
   let books: BookDTO[] = await Book.find()
     .populate('category')
@@ -30,7 +27,6 @@ const getBooksPaginated = async (page: number, limit: number) => {
     .exec();
   books = setCoverImageUrl(books);
   const totalDocuments = await Book.countDocuments();
-
   const totalPages = Math.ceil(totalDocuments / limit);
   return { currentPage: page, totalPages, totalDocuments, books };
 };

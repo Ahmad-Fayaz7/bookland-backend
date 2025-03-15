@@ -1,5 +1,28 @@
 import fs from 'fs';
+import path from 'path';
 import { Request, Response } from 'express';
+
+const BOOKS_IMAGE_PATH = '/images/books/';
+
+// Returns a full url for cover image (we need full url to delete an image)
+export function getFilePath(coverImageUrl: string) {
+  const filePath = path.join(
+    __dirname,
+    '../../public',
+    BOOKS_IMAGE_PATH,
+    getFileName(coverImageUrl),
+  );
+  return filePath;
+}
+
+// Extracts filename from a file path
+export const getFileName = (filePath: string): string => {
+  // Normalize slashes to handle both Windows (`\`) and Unix (`/`) paths
+  const normalizedPath = filePath.replace(/\\/g, '/');
+
+  // Extract the filename using `split`
+  return normalizedPath.split('/').pop() || '';
+};
 
 // Delete file
 export function deleteFile(filePath: string) {
@@ -8,14 +31,14 @@ export function deleteFile(filePath: string) {
   });
 }
 
-// Cleanup uploaded file when needed
-export function cleanupUploadedFile(req: Request) {
+// Removes uploaded file when needed
+export function removeUploadedFile(req: Request) {
   if (req.file) deleteFile(req.file.path);
 }
 
 // Handle errors
-export function handleError(res: Response, err: Error, message: string) {
+/* export function handleError(res: Response, err: Error, message: string) {
   //Console.error(`${message}: ${err.message}`);
   console.log(err.message, err);
   res.status(500).send(message);
-}
+} */

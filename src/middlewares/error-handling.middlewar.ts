@@ -5,7 +5,7 @@ const errorHandler: express.ErrorRequestHandler = (err, req, res, _next) => {
   const statusCode = err.status || 500;
   res.status(statusCode).json({
     error: {
-      message: err.message,
+      message: err.message || 'Something went wrong',
       details: err.details || null,
     },
   });
