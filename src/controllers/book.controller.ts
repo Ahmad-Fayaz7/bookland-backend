@@ -5,7 +5,6 @@ import {
   removeUploadedFile,
   deleteFile,
   getFilePath,
-  getFileName,
 } from '../utils/file.utils.js';
 import path from 'path';
 import { validateId } from '../validations/id.validator.js';
@@ -13,12 +12,7 @@ import ApiError from '../models/api-error.model.js';
 import 'dotenv/config';
 import { BookCreationDTO, BookDTO } from '../dtos/book.dto.js';
 
-import { fileURLToPath } from 'url';
-
 const BOOKS_IMAGE_PATH = '/images/books/';
-// Define __dirname manually for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // TODO: Get featured books
 const getFeaturedBooks = async (req: Request, res: Response) => {

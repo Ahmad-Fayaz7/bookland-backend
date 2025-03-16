@@ -1,7 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import { Request, Response } from 'express';
+import { fileURLToPath } from 'url';
 
+// Define __dirname manually for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const BOOKS_IMAGE_PATH = '/images/books/';
 
 // Returns a full url for cover image (we need full url to delete an image)

@@ -144,4 +144,33 @@ function evaluateQuantity(cart: ICart, cartItem: CartItemDTO, q: number) {
   return newQuantity;
 }
 
-export default { addToCart, getCart, hasItem, updateItem, getSimilarItems };
+async function createCart(user: any) {
+  // Create the cart
+  let cart = await Cart.create({
+    user: user._id, // This can be null at this point
+    cartItems: [],
+    totalPrice: 0,
+  });
+
+  user.cart = cart._id as mongoose.Types.ObjectId;
+  await user.save();
+  return cart;
+}
+
+function createCartItem(book: any) {
+  return {
+    book: book._id as mongoose.Types.ObjectId,
+    quantity: 1,
+    price: book.price,
+  };
+}
+
+export default {
+  addToCart,
+  getCart,
+  hasItem,
+  updateItem,
+  getSimilarItems,
+  createCart,
+  createCartItem,
+};
